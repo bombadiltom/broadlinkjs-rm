@@ -11,6 +11,7 @@ rmDeviceTypes[parseInt(0x27c7, 16)] = 'Broadlink RM Mini 3 A';
 rmDeviceTypes[parseInt(0x27c2, 16)] = "Broadlink RM Mini 3 B";
 rmDeviceTypes[parseInt(0x27de, 16)] = "Broadlink RM Mini 3 C";
 rmDeviceTypes[parseInt(0x5f36, 16)] = "Broadlink RM Mini 3 D";
+rmDeviceTypes[parseInt(0x27d3, 16)] = "Broadlink RM Mini 3 KR";
 rmDeviceTypes[parseInt(0x273d, 16)] = 'Broadlink RM Pro Phicomm';
 rmDeviceTypes[parseInt(0x2712, 16)] = 'Broadlink RM2';
 rmDeviceTypes[parseInt(0x2783, 16)] = 'Broadlink RM2 Home Plus';
@@ -428,9 +429,6 @@ class Device {
   onPayloadReceived (err, payload) {
     const param = payload[0];
 
-    const data = Buffer.alloc(payload.length - 4, 0);
-    payload.copy(data, 0, 4);
-
     switch (param) {
       case 1: {
         const temp = (payload[0x4] * 10 + payload[0x5]) / 10.0;
@@ -443,8 +441,10 @@ class Device {
         this.emit('rawData', data);
         break;
       }
-      case 38: { //get from check_data
-        this.emit('rawData', payload);
+      case 10: {
+        const temp = (payload[0x6] * 10 + payload[0x7]) / 10.0;
+        //const humidity = (payload[0x8] * 10 + payload[0x9]) / 10.0;
+        this.emit('temperature', temp);
         break;
       }
       case 26: { //get from check_data
@@ -459,6 +459,16 @@ class Device {
         payload.copy(data, 0, 0x4);
         if (data[0] !== 0x1) break;
         this.emit('rawRFData2', data);
+        break;
+      }
+      case 38: { //get from check_data
+        this.emit('rawData', payload);
+        break;
+      }
+      case 94: { //get data from learning
+        const data = Buffer.alloc(payload.length - 4, 0);
+        payload.copy(data, 0, 6);
+        this.emit('rawData', data);
         break;
       }
     }
